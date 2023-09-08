@@ -14,52 +14,32 @@ namespace Note.Infrastructure.DbServices
         }
         public async Task<bool> CreateNote(Domain.Models.Note note)
         {
-            string cmdText = $@"insert into note(user_id,note_id,title,create_date,is_complitet,note_type) 
-                                values({note.UserID},{note.Id},{note.Title},{note.CreationDate},{note.IsComplitet},{note.Type})";
+            string cmdText = $@"insert into note 
+                                values('{note.UserID}','{note.Id}','{note.Title}',{note.IsComplitet},'{note.Type}','{note.CreationDate}');";
             int effectedRows = await _service.ExecuteCommandAsync(cmdText);
             return effectedRows > 0;
         }
         public async Task<bool> DeleteNote(Guid noteId)
         {
-            string cmdText = $"delete from note where note_id = {noteId}";
+            string cmdText = $"delete from note where id = '{noteId}'";
             int effctedRows = await _service.ExecuteCommandAsync(cmdText);
             return effctedRows > 0;
         }
-        public async Task<IEnumerable<Domain.Models.Note>> GetAll()
+        public async Task<IEnumerable<Domain.Models.Note>> GetAll(Guid userId)
         {
-            string cmdText = "select * from note";
-            NpgsqlDataReader reder = await _service.ExecuteQueryAsync(cmdText);
-            ICollection<Domain.Models.Note> notes = new List<Domain.Models.Note>();
-            while (reder.Read())
-            {
-                notes.Add(new()
-                {
-                    UserID = (Guid)reder[0],
-                    Id = (Guid)reder[1],
-                    Title = (string)reder[2],
-                    CreationDate = (DateTime)reder[3],
-                    IsComplitet = (bool)reder[4],
-                    Type = (NoteEnum)reder[5]
-                });
-            }
-            return notes;
+            string cmdText = $"select * from note where userid = '{userId}'";
+            var reder =  _service.ExecuteQuery(cmdText);
+            return reder;
         }
         public async Task<Domain.Models.Note> GetById(Guid noteId)
         {
-            string cmd = $"select * from note ";
-            var reder = await _service.ExecuteQueryAsync(cmd);
+            string cmd = $"select * from note where id = '{noteId}'";
+            var reder = _service.ExecuteQuery(cmd);
             var note = new Domain.Models.Note();
-            while (reder.Read())
+            foreach (var item in reder)
             {
-                if ((Guid)reder[1] == noteId)
-                {
-                    note.UserID = (Guid)reder[0];
-                    note.Id = (Guid)reder[1];
-                    note.Title = (string)reder[2];
-                    note.CreationDate = (DateTime)reder[3];
-                    note.IsComplitet = (bool)reder[4];
-                    note.Type = (NoteEnum)reder[5];
-                }
+                if(item.Id==noteId)
+                    return item;
             }
             if (note.Title == String.Empty || note.Title == null)
                 Console.WriteLine("Not Found This Note");
@@ -76,7 +56,10 @@ namespace Note.Infrastructure.DbServices
                 note.IsComplitet = true;
             else
                 note.IsComplitet = false;
-            return true;
+            DbContext dbContext = new ();
+            string cmd = $"update note set title = '{note.Title}',iscomplitet = {note.IsComplitet}";
+            int res = await dbContext.ExecuteCommandAsync(cmd);
+            return res>0;
         }
     }
 }

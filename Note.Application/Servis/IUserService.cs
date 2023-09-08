@@ -9,5 +9,6 @@ namespace Note.Application.Servis
         Task<bool> DeleteUserAsync(User user);
         Task<bool> UpdateUserAsync(User user);
         Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<User> GetUserByIdAsync(Guid UserId);
     }
 }

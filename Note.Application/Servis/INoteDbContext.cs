@@ -5,6 +5,6 @@ namespace Note.Application.Servis
     public interface INoteDbContext
     {
         Task<int> ExecuteCommandAsync(string command);
-        Task<NpgsqlDataReader> ExecuteQueryAsync(string getAllQuery);
+        ICollection<Domain.Models.Note> ExecuteQuery(string getAllQuery);
     }
 }
